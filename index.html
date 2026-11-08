@@ -1,0 +1,867 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#173b59">
+<title>NeuroCognitive | Dual N-Back</title>
+<style>
+:root{
+--navy:#173b59;--blue:#24658c;--blue2:#dcecf5;
+--green:#23856f;--orange:#d58b35;--red:#bd5353;
+--ink:#203342;--muted:#6b7c88;--line:#dce5eb;
+--bg:#f3f7f9;--white:#fff
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+font-family:Tahoma,Arial,sans-serif;line-height:1.7}
+header{background:linear-gradient(120deg,#173b59,#286d91);
+color:#fff;padding:22px 16px}
+.wrap{max-width:1000px;margin:auto;padding:0 14px}
+h1{font-size:22px;margin:0 0 4px}
+.sub{font-size:13px;opacity:.9}
+main{padding:18px 0 38px}
+.card{background:#fff;border:1px solid var(--line);
+border-radius:16px;padding:16px;margin-bottom:14px;
+box-shadow:0 4px 16px rgba(20,50,70,.045)}
+h2{font-size:17px;color:var(--navy);margin:0 0 12px}
+h3{font-size:14px;margin:0 0 8px;color:var(--navy)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+input,select,button{font:inherit}
+input,select{width:100%;border:1px solid #cbd8e0;border-radius:10px;
+padding:10px;background:#fff;color:var(--ink);min-height:43px}
+button{border:0;border-radius:11px;padding:10px 15px;
+cursor:pointer;font-weight:700;min-height:43px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.primary{background:var(--blue);color:#fff}
+.success{background:var(--green);color:#fff}
+.soft{background:var(--blue2);color:var(--navy)}
+.danger{background:#f9e7e7;color:#8d3030}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.notice{background:#fff8e9;border:1px solid #f1dfb9;
+border-radius:12px;padding:11px 13px;font-size:12px;color:#73521f}
+.muted{color:var(--muted);font-size:12px}
+.hidden{display:none!important}
+.status{display:flex;justify-content:space-between;gap:8px;
+flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.progress{height:8px;background:#e8eef2;border-radius:99px;
+overflow:hidden;margin:10px 0}
+.progress>div{height:100%;background:var(--green);width:0%;transition:width .15s}
+.task-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(240px,.85fr);
+gap:14px;align-items:start}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;
+max-width:390px;margin:12px auto}
+.cell{aspect-ratio:1;border-radius:13px;background:#e6edf2;
+border:2px solid #d4e0e7;transition:background .08s,transform .08s}
+.cell.active{background:#f1a943;border-color:#d88a2b;
+transform:scale(.97);box-shadow:0 0 0 4px #f9e7cc}
+.stimulus{min-height:42px;text-align:center;font-size:26px;
+font-weight:800;color:var(--navy);letter-spacing:2px}
+.letter{font-size:28px;color:var(--green);font-weight:800}
+.response-box{background:#f7fafb;border:1px solid var(--line);
+padding:12px;border-radius:13px;margin-bottom:10px}
+.response-box p{font-size:12px;color:var(--muted);margin:0 0 8px}
+.big{font-size:20px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.kpi{background:#f5f9fb;border:1px solid var(--line);
+padding:10px;border-radius:12px;text-align:center}
+.kpi strong{display:block;font-size:19px;color:var(--navy)}
+.kpi span{font-size:11px;color:var(--muted)}
+table{border-collapse:collapse;width:100%;font-size:12px;min-width:650px}
+th,td{padding:8px;border-bottom:1px solid var(--line);
+text-align:center;white-space:nowrap}
+th{background:#f3f7f9;color:var(--navy)}
+.table-wrap{overflow:auto}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:18px}
+@media(max-width:680px){
+.grid,.task-layout{grid-template-columns:1fr}
+.kpis{grid-template-columns:repeat(2,1fr)}
+h1{font-size:19px}
+.card{padding:13px}
+.board{max-width:330px;gap:7px}
+}
+</style>
+</head>
+<body>
+
+<header>
+<div class="wrap">
+<h1>NeuroCognitive | آزمون حافظه فعال دوگانه</h1>
+<div class="sub">Dual N-Back · Research Edition 1.0</div>
+</div>
+</header>
+
+<main class="wrap">
+
+<section class="card" id="setup">
+<h2>۱. مشخصات آزمودنی و تنظیمات اجرا</h2>
+<div class="grid">
+
+<div class="field">
+<label>شناسه آزمودنی</label>
+<input id="participantId" placeholder="مثلاً P001">
+</div>
+
+<div class="field">
+<label>شناسه جلسه</label>
+<input id="sessionId" placeholder="مثلاً S01">
+</div>
+
+<div class="field">
+<label>سطح N</label>
+<select id="nLevel">
+<option value="1">N = 1</option>
+<option value="2" selected>N = 2</option>
+<option value="3">N = 3</option>
+</select>
+</div>
+
+<div class="field">
+<label>تعداد کوشش‌ها</label>
+<select id="trialCount">
+<option value="20">۲۰ کوشش</option>
+<option value="30" selected>۳۰ کوشش</option>
+<option value="40">۴۰ کوشش</option>
+<option value="60">۶۰ کوشش</option>
+</select>
+</div>
+
+<div class="field">
+<label>مدت نمایش محرک (میلی‌ثانیه)</label>
+<input id="stimulusMs" type="number" min="300" max="2000" value="500">
+</div>
+
+<div class="field">
+<label>مدت هر کوشش (میلی‌ثانیه)</label>
+<input id="trialMs" type="number" min="1500" max="5000" value="2500">
+</div>
+
+<div class="field">
+<label>فاصله بین کوشش‌ها (میلی‌ثانیه)</label>
+<input id="gapMs" type="number" min="0" max="1500" value="500">
+</div>
+
+<div class="field">
+<label>سرعت گفتار</label>
+<input id="voiceRate" type="number" min="0.6" max="1.3"
+step="0.1" value="0.9">
+</div>
+
+</div>
+
+<div class="actions">
+<button class="soft" id="audioTestBtn">آزمایش صدای حروف</button>
+<button class="soft" id="practiceBtn">اجرای تمرین کوتاه</button>
+<button class="primary" id="startBtn">شروع آزمون اصلی</button>
+</div>
+
+<p class="muted">
+حروف محرک: B، C، D، F، G، H، K، L.
+موقعیت دیداری در شبکه ۳×۳ نمایش داده می‌شود.
+پاسخ هر کانال مستقل است.
+</p>
+</section>
+
+<section class="card">
+<h2>راهنمای آزمودنی</h2>
+<ol style="font-size:13px;padding-right:20px;margin:0">
+<li>در هر کوشش یک مربع روشن می‌شود و یک حرف شنیده می‌شود.</li>
+<li>اگر موقعیت مربع با موقعیت N کوشش قبل یکسان بود، دکمه تطابق دیداری را بزنید.</li>
+<li>اگر حرف با حرف N کوشش قبل یکسان بود، دکمه تطابق شنیداری را بزنید.</li>
+<li>اگر تطابقی وجود نداشت، در آن کانال دکمه‌ای نزنید.</li>
+<li>برای هر کانال در هر کوشش حداکثر یک پاسخ ثبت می‌شود.</li>
+</ol>
+<div class="notice" style="margin-top:12px">
+این ابزار نسخه پژوهشی آزمایشی است و هنجاریابی یا اعتبار تشخیصی مستقل ندارد.
+تنظیمات، دستگاه، صدای مرورگر، اندازه صفحه و شرایط اجرا باید در پروتکل پژوهش ثابت و گزارش شوند.
+</div>
+</section>
+
+<section class="card hidden" id="task">
+<div class="status">
+<span id="phaseLabel">در حال آماده‌سازی</span>
+<span id="trialLabel">کوشش ۰ از ۰</span>
+</div>
+<div class="progress"><div id="progressBar"></div></div>
+
+<div class="task-layout">
+<div>
+<div class="stimulus" id="visualCue">آماده باشید</div>
+<div class="board" id="board">
+<div class="cell" data-pos="0"></div>
+<div class="cell" data-pos="1"></div>
+<div class="cell" data-pos="2"></div>
+<div class="cell" data-pos="3"></div>
+<div class="cell" data-pos="4"></div>
+<div class="cell" data-pos="5"></div>
+<div class="cell" data-pos="6"></div>
+<div class="cell" data-pos="7"></div>
+<div class="cell" data-pos="8"></div>
+</div>
+<div class="stimulus">محرک شنیداری:
+<span class="letter" id="letterCue">—</span>
+</div>
+</div>
+
+<div>
+<div class="response-box">
+<h3>پاسخ دیداری</h3>
+<p>در صورت تطابق موقعیت با N کوشش قبل، لمس کنید.</p>
+<button class="primary big" id="visualResponse" disabled>
+تطابق دیداری
+</button>
+</div>
+
+<div class="response-box">
+<h3>پاسخ شنیداری</h3>
+<p>در صورت تطابق حرف با N کوشش قبل، لمس کنید.</p>
+<button class="success big" id="audioResponse" disabled>
+تطابق شنیداری
+</button>
+</div>
+
+<div class="muted" id="responseState">
+پاسخ‌ها پس از آغاز هر کوشش فعال می‌شوند.
+</div>
+
+<div class="actions">
+<button class="danger" id="cancelBtn">لغو آزمون</button>
+</div>
+</div>
+</div>
+</section>
+
+<section class="card hidden" id="results">
+<h2>۲. نتیجه آزمون</h2>
+<div class="kpis" id="kpiGrid"></div>
+
+<div class="grid" style="margin-top:12px">
+<div class="response-box">
+<h3>عملکرد دیداری</h3>
+<div id="visualStats" class="muted"></div>
+</div>
+<div class="response-box">
+<h3>عملکرد شنیداری</h3>
+<div id="audioStats" class="muted"></div>
+</div>
+</div>
+
+<div class="actions">
+<button class="primary" id="downloadJson">دانلود JSON</button>
+<button class="soft" id="downloadCsv">دانلود CSV کوشش‌ها</button>
+<button class="soft" id="downloadSummary">دانلود CSV خلاصه</button>
+<button class="success" id="newRunBtn">اجرای آزمون جدید</button>
+</div>
+
+<h3 style="margin-top:18px">داده‌های کوشش‌ها</h3>
+<div class="table-wrap">
+<table id="trialTable">
+<thead>
+<tr>
+<th>کوشش</th><th>موقعیت</th><th>حرف</th>
+<th>هدف دیداری</th><th>هدف شنیداری</th>
+<th>پاسخ دیداری</th><th>پاسخ شنیداری</th>
+<th>نتیجه دیداری</th><th>نتیجه شنیداری</th>
+<th>زمان پاسخ دیداری</th><th>زمان پاسخ شنیداری</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+</section>
+
+<section class="card">
+<h2>۳. داده‌های ذخیره‌شده در این مرورگر</h2>
+<p class="muted">
+نتایج پس از پایان آزمون به‌صورت خودکار در حافظه محلی همین مرورگر ذخیره می‌شوند.
+خروجی JSON را جداگانه نگهداری کنید.
+</p>
+<div class="actions">
+<button class="soft" id="exportAllBtn">خروجی همه جلسات JSON</button>
+<button class="danger" id="clearAllBtn">حذف همه داده‌های محلی</button>
+</div>
+<div id="savedCount" class="muted" style="margin-top:8px"></div>
+</section>
+
+</main>
+
+<footer>
+NeuroCognitive Research Edition · Dual N-Back · Developed by M. Khoshroo
+</footer>
+
+<script>
+"use strict";
+
+const STORE_KEY="neurocognitive_dual_nback_v1";
+const LETTERS=["B","C","D","F","G","H","K","L"];
+
+const $=id=>document.getElementById(id);
+
+let run=null;
+let timers=[];
+let speechVoice=null;
+let currentTrial=null;
+let trialOpen=false;
+let practiceMode=false;
+
+function getSaved(){
+try{
+const x=JSON.parse(localStorage.getItem(STORE_KEY)||"[]");
+return Array.isArray(x)?x:[];
+}catch(e){return [];}
+}
+
+function setSaved(data){
+localStorage.setItem(STORE_KEY,JSON.stringify(data));
+updateSavedCount();
+}
+
+function updateSavedCount(){
+$("savedCount").textContent=
+"تعداد اجراهای ذخیره‌شده: "+getSaved().length;
+}
+
+function clearTimers(){
+timers.forEach(t=>clearTimeout(t));
+timers=[];
+}
+
+function later(fn,ms){
+const t=setTimeout(fn,ms);
+timers.push(t);
+return t;
+}
+
+function choose(arr){
+return arr[Math.floor(Math.random()*arr.length)];
+}
+
+function pickVoice(){
+if(!("speechSynthesis" in window))return;
+const voices=speechSynthesis.getVoices();
+speechVoice=voices.find(v=>/^en(-|_)?(US|GB)/i.test(v.lang))
+||voices.find(v=>/^en/i.test(v.lang))||null;
+}
+
+if("speechSynthesis" in window){
+pickVoice();
+speechSynthesis.onvoiceschanged=pickVoice;
+}
+
+function speakLetter(letter,rate){
+if(!("speechSynthesis" in window))return false;
+try{
+speechSynthesis.cancel();
+const u=new SpeechSynthesisUtterance(letter);
+u.lang=speechVoice?.lang||"en-US";
+if(speechVoice)u.voice=speechVoice;
+u.rate=rate;
+u.pitch=1;
+u.volume=1;
+speechSynthesis.speak(u);
+return true;
+}catch(e){return false;}
+}
+
+function settings(){
+const n=+$("nLevel").value;
+const count=+$("trialCount").value;
+const stimulusMs=+$("stimulusMs").value;
+const trialMs=+$("trialMs").value;
+const gapMs=+$("gapMs").value;
+const voiceRate=+$("voiceRate").value;
+
+if(stimulusMs<300||stimulusMs>2000||
+trialMs<1500||trialMs>5000||
+gapMs<0||gapMs>1500||trialMs<=stimulusMs){
+alert("لطفاً زمان‌بندی‌ها را در محدوده مجاز وارد کنید.");
+return null;
+}
+
+if(!("speechSynthesis" in window)){
+alert("این مرورگر از گفتار استفاده نمی‌کند.");
+return null;
+}
+
+return {n,count,stimulusMs,trialMs,gapMs,voiceRate};
+}
+
+function buildSequence(count,n){
+const seq=[];
+
+for(let i=0;i<count;i++){
+let pos=Math.floor(Math.random()*9);
+let letter=choose(LETTERS);
+
+if(i>=n){
+const r=Math.random();
+
+if(r<0.28){
+pos=seq[i-n].pos;
+}else if(r<0.56){
+letter=seq[i-n].letter;
+}else if(r<0.70){
+pos=seq[i-n].pos;
+letter=choose(LETTERS.filter(x=>x!==seq[i-n].letter));
+}else{
+const p=seq[i-n].pos;
+const l=seq[i-n].letter;
+pos=choose(Array.from({length:9},(_,k)=>k).filter(x=>x!==p));
+letter=choose(LETTERS.filter(x=>x!==l));
+}
+}
+
+seq.push({pos,letter});
+}
+
+return seq;
+}
+
+function resetBoard(){
+document.querySelectorAll(".cell").forEach(c=>
+c.classList.remove("active"));
+}
+
+function flashPosition(pos){
+resetBoard();
+const c=document.querySelector('.cell[data-pos="'+pos+'"]');
+if(c)c.classList.add("active");
+}
+
+function setResponseEnabled(v){
+$("visualResponse").disabled=!v;
+$("audioResponse").disabled=!v;
+}
+
+function markResponse(channel){
+if(!trialOpen||!currentTrial)return;
+
+const key=channel==="visual"?"visualResponse":"audioResponse";
+
+if(currentTrial.responses[channel]!==null)return;
+
+const rt=performance.now()-currentTrial.responseWindowStart;
+
+currentTrial.responses[channel]=true;
+currentTrial.responseRT[channel]=Math.round(rt);
+
+$(key).disabled=true;
+$(key).textContent="ثبت شد ✓";
+
+$("responseState").textContent=
+"پاسخ ثبت شد؛ در صورت نیاز پاسخ کانال دیگر را نیز وارد کنید.";
+}
+
+$("visualResponse").onclick=()=>markResponse("visual");
+$("audioResponse").onclick=()=>markResponse("audio");
+
+function beginRun(isPractice){
+const s=settings();
+if(!s)return;
+
+practiceMode=!!isPractice;
+
+const count=practiceMode?Math.max(8,s.n+6):s.count;
+
+run={
+schemaVersion:"1.0",
+task:"Dual N-Back",
+mode:practiceMode?"practice":"research",
+participantId:$("participantId").value.trim()||"UNSPECIFIED",
+sessionId:$("sessionId").value.trim()||"UNSPECIFIED",
+n:s.n,
+settings:{...s,actualTrialCount:count},
+startedAt:new Date().toISOString(),
+device:{
+userAgent:navigator.userAgent,
+language:navigator.language,
+screenWidth:screen.width,
+screenHeight:screen.height,
+viewportWidth:innerWidth,
+viewportHeight:innerHeight,
+pixelRatio:devicePixelRatio||1
+},
+trials:[],
+sequence:buildSequence(count,s.n),
+completed:false
+};
+
+$("setup").classList.add("hidden");
+$("results").classList.add("hidden");
+$("task").classList.remove("hidden");
+
+$("phaseLabel").textContent=practiceMode?"تمرین":"آزمون اصلی";
+$("trialLabel").textContent="کوشش ۰ از "+count;
+$("progressBar").style.width="0%";
+$("visualCue").textContent="آماده باشید";
+$("letterCue").textContent="—";
+$("responseState").textContent="ابتدا محرک‌ها را مشاهده و گوش کنید.";
+
+setResponseEnabled(false);
+resetBoard();
+
+if("speechSynthesis" in window)speechSynthesis.cancel();
+
+clearTimers();
+later(()=>runTrial(0),900);
+}
+
+function outcome(target,response){
+if(target&&response)return "hit";
+if(target&&!response)return "miss";
+if(!target&&response)return "false_alarm";
+return "correct_rejection";
+}
+
+function runTrial(index){
+if(!run)return;
+
+if(index>=run.sequence.length){
+finishRun();
+return;
+}
+
+const s=run.settings;
+const stim=run.sequence[index];
+
+const visualTarget=index>=run.n&&
+stim.pos===run.sequence[index-run.n].pos;
+
+const audioTarget=index>=run.n&&
+stim.letter===run.sequence[index-run.n].letter;
+
+currentTrial={
+index:index+1,
+stimulus:stim,
+visualTarget,
+audioTarget,
+responses:{visual:null,audio:null},
+responseRT:{visual:null,audio:null},
+onsetAt:new Date().toISOString(),
+responseWindowStart:null,
+visualPresentedAt:null,
+audioRequestedAt:null
+};
+
+trialOpen=false;
+
+$("trialLabel").textContent=
+"کوشش "+(index+1)+" از "+run.sequence.length;
+
+$("progressBar").style.width=
+(index/run.sequence.length*100)+"%";
+
+$("visualCue").textContent="";
+$("letterCue").textContent="—";
+
+resetBoard();
+setResponseEnabled(false);
+
+$("visualResponse").textContent="تطابق دیداری";
+$("audioResponse").textContent="تطابق شنیداری";
+$("responseState").textContent="به محرک‌ها توجه کنید…";
+
+currentTrial.visualPresentedAt=new Date().toISOString();
+flashPosition(stim.pos);
+
+currentTrial.audioRequestedAt=new Date().toISOString();
+speakLetter(stim.letter,s.voiceRate);
+
+$("letterCue").textContent="♪";
+
+later(()=>{
+resetBoard();
+$("letterCue").textContent="—";
+},s.stimulusMs);
+
+currentTrial.responseWindowStart=performance.now();
+trialOpen=true;
+setResponseEnabled(true);
+
+$("responseState").textContent=
+"در صورت مشاهده تطابق، دکمه مربوط را لمس کنید.";
+
+later(()=>{
+trialOpen=false;
+setResponseEnabled(false);
+
+const t=currentTrial;
+
+const row={
+trial:t.index,
+n:run.n,
+position:t.stimulus.pos+1,
+letter:t.stimulus.letter,
+visualTarget:t.visualTarget,
+audioTarget:t.audioTarget,
+visualResponse:t.responses.visual===true,
+audioResponse:t.responses.audio===true,
+visualRTms:t.responseRT.visual,
+audioRTms:t.responseRT.audio,
+visualOutcome:outcome(t.visualTarget,t.responses.visual===true),
+audioOutcome:outcome(t.audioTarget,t.responses.audio===true),
+omittedVisual:t.responses.visual===null,
+omittedAudio:t.responses.audio===null,
+onsetAt:t.onsetAt,
+visualPresentedAt:t.visualPresentedAt,
+audioRequestedAt:t.audioRequestedAt,
+responseWindowMs:s.trialMs,
+stimulusDurationMs:s.stimulusMs,
+interTrialIntervalMs:s.gapMs
+};
+
+run.trials.push(row);
+
+$("responseState").textContent="کوشش ثبت شد.";
+
+later(()=>runTrial(index+1),s.gapMs);
+
+},s.trialMs);
+}
+
+function stats(rows,channel){
+const outKey=channel+"Outcome";
+const rtKey=channel+"RTms";
+
+const hits=rows.filter(x=>x[outKey]==="hit").length;
+const misses=rows.filter(x=>x[outKey]==="miss").length;
+const fa=rows.filter(x=>x[outKey]==="false_alarm").length;
+const cr=rows.filter(x=>x[outKey]==="correct_rejection").length;
+
+const targets=hits+misses;
+const nonTargets=fa+cr;
+
+const accuracy=rows.length?
+((hits+cr)/rows.length*100):0;
+
+const targetAccuracy=targets?hits/targets*100:0;
+const nonTargetAccuracy=nonTargets?cr/nonTargets*100:0;
+
+const rts=rows.filter(x=>
+x[rtKey]!==null&&x[outKey]==="hit").map(x=>x[rtKey]);
+
+const meanRT=rts.length?
+rts.reduce((a,b)=>a+b,0)/rts.length:null;
+
+return {
+hits,misses,falseAlarms:fa,correctRejections:cr,
+targets,nonTargets,
+accuracy:+accuracy.toFixed(2),
+targetAccuracy:+targetAccuracy.toFixed(2),
+nonTargetAccuracy:+nonTargetAccuracy.toFixed(2),
+meanHitRTms:meanRT===null?null:+meanRT.toFixed(1)
+};
+}
+
+function statsHTML(s){
+return `اصابت: ${s.hits} | عدم پاسخ به هدف: ${s.misses}<br>
+پاسخ کاذب: ${s.falseAlarms} | رد صحیح: ${s.correctRejections}<br>
+دقت کل کانال: ${s.accuracy}٪<br>
+دقت تشخیص هدف: ${s.targetAccuracy}٪<br>
+دقت رد غیرهدف: ${s.nonTargetAccuracy}٪<br>
+میانگین زمان واکنش به اهداف صحیح:
+${s.meanHitRTms===null?"—":s.meanHitRTms+" ms"}`;
+}
+
+function outcomeFa(x){
+return ({
+hit:"اصابت",
+miss:"عدم پاسخ",
+false_alarm:"پاسخ کاذب",
+correct_rejection:"رد صحیح"
+})[x]||x;
+}
+
+function summary(data){
+return {
+schemaVersion:data.schemaVersion,
+task:data.task,
+mode:data.mode,
+participantId:data.participantId,
+sessionId:data.sessionId,
+n:data.n,
+trialCount:data.trials.length,
+startedAt:data.startedAt,
+completedAt:data.completedAt,
+visual:stats(data.trials,"visual"),
+auditory:stats(data.trials,"audio"),
+settings:data.settings,
+device:data.device
+};
+}
+
+function renderResults(data){
+const v=stats(data.trials,"visual");
+const a=stats(data.trials,"audio");
+
+const totalCorrect=v.hits+v.correctRejections+
+a.hits+a.correctRejections;
+
+const totalPossible=data.trials.length*2;
+const combined=totalPossible?totalCorrect/totalPossible*100:0;
+
+const kpis=[
+["سطح N",data.n],
+["تعداد کوشش",data.trials.length],
+["دقت کل دو کانال",combined.toFixed(1)+"٪"],
+["زمان اجرا",Math.round(
+(new Date(data.completedAt)-new Date(data.startedAt))/1000)+" ثانیه"]
+];
+
+$("kpiGrid").innerHTML=kpis.map(x=>
+'<div class="kpi"><strong>'+x[1]+
+'</strong><span>'+x[0]+'</span></div>').join("");
+
+$("visualStats").innerHTML=statsHTML(v);
+$("audioStats").innerHTML=statsHTML(a);
+
+$("trialTable").querySelector("tbody").innerHTML=
+data.trials.map(t=>`<tr>
+<td>${t.trial}</td>
+<td>${t.position}</td>
+<td>${t.letter}</td>
+<td>${t.visualTarget?"بله":"خیر"}</td>
+<td>${t.audioTarget?"بله":"خیر"}</td>
+<td>${t.visualResponse?"بله":"خیر"}</td>
+<td>${t.audioResponse?"بله":"خیر"}</td>
+<td>${outcomeFa(t.visualOutcome)}</td>
+<td>${outcomeFa(t.audioOutcome)}</td>
+<td>${t.visualRTms??"—"}</td>
+<td>${t.audioRTms??"—"}</td>
+</tr>`).join("");
+}
+
+function finishRun(){
+clearTimers();
+trialOpen=false;
+setResponseEnabled(false);
+resetBoard();
+
+if("speechSynthesis" in window)speechSynthesis.cancel();
+
+run.completed=true;
+run.completedAt=new Date().toISOString();
+
+if(!practiceMode){
+try{
+const all=getSaved();
+all.push(run);
+setSaved(all);
+}catch(e){
+alert("ذخیره محلی انجام نشد. لطفاً خروجی JSON را دریافت کنید.");
+}
+}
+
+renderResults(run);
+$("task").classList.add("hidden");
+$("results").classList.remove("hidden");
+$("setup").classList.remove("hidden");
+}
+
+function csvEscape(v){
+if(v===null||v===undefined)return "";
+return '"'+String(v).replace(/"/g,'""')+'"';
+}
+
+function csvFromObjects(rows){
+if(!rows.length)return "";
+const keys=Object.keys(rows[0]);
+return [
+keys.map(csvEscape).join(","),
+...rows.map(r=>keys.map(k=>csvEscape(r[k])).join(","))
+].join("\r\n");
+}
+
+function download(name,content,type){
+const blob=new Blob(["\ufeff"+content],{type});
+const url=URL.createObjectURL(blob);
+const a=document.createElement("a");
+a.href=url;
+a.download=name;
+document.body.appendChild(a);
+a.click();
+a.remove();
+setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+
+function safeName(s){
+return String(s||"run").replace(/[^a-zA-Z0-9_-]/g,"_");
+}
+
+$("audioTestBtn").onclick=()=>{
+if(!("speechSynthesis" in window)){
+alert("گفتار در این مرورگر پشتیبانی نمی‌شود.");
+return;
+}
+pickVoice();
+speakLetter("B",+$("voiceRate").value||0.9);
+later(()=>speakLetter("K",+$("voiceRate").value||0.9),1100);
+};
+
+$("practiceBtn").onclick=()=>beginRun(true);
+$("startBtn").onclick=()=>beginRun(false);
+
+$("cancelBtn").onclick=()=>{
+if(!confirm("آزمون لغو شود؟ داده‌های اجرای ناتمام ذخیره نخواهند شد."))return;
+clearTimers();
+trialOpen=false;
+run=null;
+currentTrial=null;
+if("speechSynthesis" in window)speechSynthesis.cancel();
+setResponseEnabled(false);
+resetBoard();
+$("task").classList.add("hidden");
+$("setup").classList.remove("hidden");
+};
+
+$("downloadJson").onclick=()=>{
+if(run)download(
+"DualNBack_"+safeName(run.participantId)+"_"+Date.now()+".json",
+JSON.stringify(run,null,2),"application/json"
+);
+};
+
+$("downloadCsv").onclick=()=>{
+if(run)download(
+"DualNBack_trials_"+safeName(run.participantId)+".csv",
+csvFromObjects(run.trials),"text/csv;charset=utf-8"
+);
+};
+
+$("downloadSummary").onclick=()=>{
+if(run)download(
+"DualNBack_summary_"+safeName(run.participantId)+".csv",
+csvFromObjects([summary(run)]),"text/csv;charset=utf-8"
+);
+};
+
+$("newRunBtn").onclick=()=>{
+$("results").classList.add("hidden");
+$("setup").classList.remove("hidden");
+run=null;
+};
+
+$("exportAllBtn").onclick=()=>{
+download(
+"NeuroCognitive_DualNBack_Backup_"+Date.now()+".json",
+JSON.stringify({
+schemaVersion:"1.0",
+exportedAt:new Date().toISOString(),
+runs:getSaved()
+},null,2),
+"application/json"
+);
+};
+
+$("clearAllBtn").onclick=()=>{
+if(!confirm("تمام اجراهای ذخیره‌شده حذف شوند؟ این کار قابل بازگشت نیست."))return;
+localStorage.removeItem(STORE_KEY);
+updateSavedCount();
+};
+
+updateSavedCount();
+</script>
+</body>
+</html>
